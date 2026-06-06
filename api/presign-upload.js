@@ -1,4 +1,5 @@
 import { buildUploadObjectKey, byteLength, presignMetadataUpload, presignUpload, publicUrlForKey } from "../lib/r2.js";
+import { requireUploadSession } from "../lib/auth.js";
 
 async function readJson(request) {
   const chunks = [];
@@ -19,10 +20,7 @@ export default async function handler(request, response) {
     return;
   }
 
-  const expectedToken = process.env.UPLOAD_TOKEN;
-  const providedToken = request.headers["x-upload-token"];
-  if (!expectedToken || providedToken !== expectedToken) {
-    response.status(401).json({ error: "Invalid upload token." });
+  if (!requireUploadSession(request, response)) {
     return;
   }
 

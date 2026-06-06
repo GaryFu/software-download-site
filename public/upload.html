@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>上传管理</title>
+    <meta name="description" content="软件包上传管理" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel hero compact-hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Admin Console</p>
+          <h1 id="page-title">上传管理</h1>
+          <p class="summary">登录后发布新的 APK。支持点击选择、拖拽文件到上传区，或直接粘贴剪贴板中的 APK 文件。</p>
+        </div>
+        <a class="button ghost" href="/">返回下载页</a>
+      </section>
+
+      <section id="login-panel" class="panel upload-card" aria-labelledby="login-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Sign In</p>
+            <h2 id="login-title">管理员登录</h2>
+          </div>
+        </div>
+        <form id="login-form" class="upload-form">
+          <label>
+            用户名
+            <input name="username" autocomplete="username" required />
+          </label>
+          <label>
+            密码
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="button full" type="submit">登录</button>
+        </form>
+        <p id="login-message" class="form-message" aria-live="polite"></p>
+      </section>
+
+      <section id="upload-panel" class="panel upload-card hidden" aria-labelledby="upload-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Release</p>
+            <h2 id="upload-title">上传新软件包</h2>
+          </div>
+          <button id="logout-button" class="button ghost" type="button">退出登录</button>
+        </div>
+
+        <form id="upload-form" class="upload-form">
+          <label>
+            软件名称
+            <input name="appName" autocomplete="off" placeholder="Android 软件包" />
+          </label>
+          <label>
+            版本号
+            <input name="version" autocomplete="off" placeholder="例如 1.0.0" />
+          </label>
+
+          <div id="drop-zone" class="drop-zone full" role="button" tabindex="0">
+            <input
+              id="file-input"
+              name="file"
+              type="file"
+              accept=".apk,application/vnd.android.package-archive"
+              class="visually-hidden"
+              required
+            />
+            <div class="drop-icon" aria-hidden="true"></div>
+            <strong>拖拽 APK 到这里</strong>
+            <span>也可以点击选择，或在此页面直接粘贴文件。</span>
+            <small id="selected-file">尚未选择文件</small>
+          </div>
+
+          <button class="button full" type="submit">上传并发布</button>
+        </form>
+
+        <div class="progress" aria-live="polite">
+          <div id="progress-bar"></div>
+          <p id="upload-message">选择 APK 后即可上传。</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/upload.js" type="module"></script>
+  </body>
+</html>

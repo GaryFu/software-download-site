@@ -6,9 +6,6 @@ const elements = {
   fileSize: document.querySelector("#file-size"),
   releaseDate: document.querySelector("#release-date"),
   sha256: document.querySelector("#sha256"),
-  form: document.querySelector("#upload-form"),
-  progressBar: document.querySelector("#progress-bar"),
-  uploadMessage: document.querySelector("#upload-message"),
   downloadButton: document.querySelector("#download-button"),
 };
 
@@ -24,11 +21,6 @@ function formatBytes(bytes) {
     unitIndex += 1;
   }
   return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
-}
-
-function setProgress(percent, message) {
-  elements.progressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
-  elements.uploadMessage.textContent = message;
 }
 
 function renderPackage(metadata) {
@@ -52,88 +44,8 @@ async function loadPackage() {
     renderPackage(data.package || {});
   } catch (error) {
     elements.status.textContent = "读取失败";
-    elements.uploadMessage.textContent = error.message;
+    elements.appVersion.textContent = error.message;
   }
 }
-
-async function sha256File(file) {
-  const buffer = await file.arrayBuffer();
-  const hash = await crypto.subtle.digest("SHA-256", buffer);
-  return [...new Uint8Array(hash)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function uploadToSignedUrl(url, body, contentType) {
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "content-type": contentType,
-    },
-    body,
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || `上传失败：${response.status}`);
-  }
-}
-
-elements.form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const submitButton = elements.form.querySelector("button");
-  const formData = new FormData(elements.form);
-  const file = formData.get("file");
-  const token = String(formData.get("token") || "");
-
-  if (!(file instanceof File) || file.size === 0) {
-    setProgress(0, "请选择 APK 文件。");
-    return;
-  }
-
-  submitButton.disabled = true;
-  try {
-    setProgress(10, "正在计算 SHA-256...");
-    const sha256 = await sha256File(file);
-
-    setProgress(28, "正在创建 R2 上传地址...");
-    const presignResponse = await fetch("/api/presign-upload", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-upload-token": token,
-      },
-      body: JSON.stringify({
-        appName: String(formData.get("appName") || "Android 软件包"),
-        version: String(formData.get("version") || ""),
-        fileName: file.name,
-        contentType: file.type || "application/vnd.android.package-archive",
-        size: file.size,
-        sha256,
-      }),
-    });
-    const presign = await presignResponse.json();
-    if (!presignResponse.ok) {
-      throw new Error(presign.error || "无法创建上传地址。");
-    }
-
-    setProgress(52, "正在上传 APK 到 R2...");
-    await uploadToSignedUrl(
-      presign.uploadUrl,
-      file,
-      file.type || "application/vnd.android.package-archive",
-    );
-
-    setProgress(86, "正在发布软件包信息...");
-    await uploadToSignedUrl(presign.metadataUploadUrl, presign.metadataBody, "application/json");
-
-    setProgress(100, "发布完成。");
-    elements.form.reset();
-    await loadPackage();
-  } catch (error) {
-    setProgress(0, error.message || "上传失败。");
-  } finally {
-    submitButton.disabled = false;
-  }
-});
 
 loadPackage();

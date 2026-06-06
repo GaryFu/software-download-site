@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>软件下载</title>
-    <meta name="description" content="软件包上传与下载" />
+    <meta name="description" content="软件下载" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -13,7 +13,7 @@
         <div>
           <p class="eyebrow">Software Package</p>
           <h1 id="page-title">软件下载</h1>
-          <p class="summary">当前可用安装包会显示在这里。下载无需输入 key，上传新版本需要管理员 token。</p>
+          <p class="summary">当前可用安装包会显示在这里。点击下载即可安装，无需登录，也无需输入任何 key。</p>
         </div>
         <div class="mark" aria-hidden="true">
           <span></span>
@@ -56,40 +56,7 @@
           </div>
         </dl>
       </section>
-
-      <section class="panel upload-card" aria-labelledby="upload-title">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Admin Upload</p>
-            <h2 id="upload-title">上传新软件包</h2>
-          </div>
-        </div>
-
-        <form id="upload-form" class="upload-form">
-          <label>
-            软件名称
-            <input name="appName" autocomplete="off" placeholder="Android 软件包" />
-          </label>
-          <label>
-            版本号
-            <input name="version" autocomplete="off" placeholder="例如 1.0.0" />
-          </label>
-          <label class="full">
-            APK 文件
-            <input name="file" type="file" accept=".apk,application/vnd.android.package-archive" required />
-          </label>
-          <label class="full">
-            管理员 token
-            <input name="token" type="password" autocomplete="current-password" required />
-          </label>
-          <button class="button" type="submit">上传并发布</button>
-        </form>
-
-        <div class="progress" aria-live="polite">
-          <div id="progress-bar"></div>
-          <p id="upload-message">选择 APK 后即可上传。</p>
-        </div>
-      </section>
+      <p class="quiet-foot">如需发布新版本，请访问上传管理页。</p>
     </main>
 
     <script src="/app.js" type="module"></script>
