@@ -8,6 +8,6 @@
     "deploy": "vercel --prod",
     "publish:apk": "node scripts/publish-apk.mjs",
     "configure:cors": "node scripts/configure-cors.mjs",
-    "check": "node --check api/package.js && node --check api/download.js && node --check api/presign-upload.js && node --check api/login.js && node --check api/logout.js && node --check api/session.js && node --check lib/r2.js && node --check lib/auth.js && node --check scripts/publish-apk.mjs && node --check scripts/configure-cors.mjs"
+    "check": "node --check api/package.js && node --check api/download.js && node --check api/presign-upload.js && node --check api/multipart-upload.js && node --check api/login.js && node --check api/logout.js && node --check api/session.js && node --check lib/r2.js && node --check lib/auth.js && node --check scripts/publish-apk.mjs && node --check scripts/configure-cors.mjs"
   }
 }

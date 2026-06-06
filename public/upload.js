@@ -64,17 +64,84 @@ async function sha256File(file) {
     .join("");
 }
 
-async function uploadToSignedUrl(url, body, contentType) {
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "content-type": contentType,
-    },
-    body,
+async function uploadJson(payload) {
+  const response = await fetch("/api/multipart-upload", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
   });
+  const data = await response.json();
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || `上传失败：${response.status}`);
+    if (response.status === 401) {
+      setAuthenticated(false);
+    }
+    throw new Error(data.error || `上传失败：${response.status}`);
+  }
+  return data;
+}
+
+async function uploadChunk({ objectKey, uploadId, partNumber, chunk }) {
+  const params = new URLSearchParams({
+    objectKey,
+    uploadId,
+    partNumber: String(partNumber),
+  });
+  const response = await fetch(`/api/multipart-upload?${params.toString()}`, {
+    method: "PUT",
+    headers: { "content-type": "application/octet-stream" },
+    body: chunk,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    if (response.status === 401) {
+      setAuthenticated(false);
+    }
+    throw new Error(data.error || `分片 ${partNumber} 上传失败。`);
+  }
+  return data;
+}
+
+async function uploadFileInChunks({ file, metadata }) {
+  const chunkSize = 3 * 1024 * 1024;
+  const created = await uploadJson({
+    action: "create",
+    fileName: file.name,
+    contentType: file.type || "application/vnd.android.package-archive",
+  });
+  const parts = [];
+  let partNumber = 1;
+  let uploadedBytes = 0;
+
+  try {
+    for (let offset = 0; offset < file.size; offset += chunkSize) {
+      const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size));
+      const result = await uploadChunk({
+        objectKey: created.objectKey,
+        uploadId: created.uploadId,
+        partNumber,
+        chunk,
+      });
+      parts.push({ partNumber: result.partNumber, etag: result.etag });
+      uploadedBytes += chunk.size;
+      setProgress(32 + (uploadedBytes / file.size) * 54, `正在上传第 ${partNumber} 个分片...`);
+      partNumber += 1;
+    }
+
+    setProgress(90, "正在合并分片并发布软件包信息...");
+    return await uploadJson({
+      action: "complete",
+      objectKey: created.objectKey,
+      uploadId: created.uploadId,
+      parts,
+      ...metadata,
+    });
+  } catch (error) {
+    await uploadJson({
+      action: "abort",
+      objectKey: created.objectKey,
+      uploadId: created.uploadId,
+    }).catch(() => {});
+    throw error;
   }
 }
 
@@ -178,38 +245,17 @@ elements.uploadForm.addEventListener("submit", async (event) => {
     setProgress(10, "正在计算 SHA-256...");
     const sha256 = await sha256File(file);
 
-    setProgress(28, "正在创建 R2 上传地址...");
-    const presignResponse = await fetch("/api/presign-upload", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
+    setProgress(28, "正在创建分片上传任务...");
+    await uploadFileInChunks({
+      file,
+      metadata: {
         appName: String(formData.get("appName") || "Android 软件包"),
         version: String(formData.get("version") || ""),
         fileName: file.name,
-        contentType: file.type || "application/vnd.android.package-archive",
         size: file.size,
         sha256,
-      }),
+      },
     });
-    const presign = await presignResponse.json();
-    if (!presignResponse.ok) {
-      if (presignResponse.status === 401) {
-        setAuthenticated(false);
-      }
-      throw new Error(presign.error || "无法创建上传地址。");
-    }
-
-    setProgress(52, "正在上传 APK 到 R2...");
-    await uploadToSignedUrl(
-      presign.uploadUrl,
-      file,
-      file.type || "application/vnd.android.package-archive",
-    );
-
-    setProgress(86, "正在发布软件包信息...");
-    await uploadToSignedUrl(presign.metadataUploadUrl, presign.metadataBody, "application/json");
 
     setProgress(100, "发布完成。下载页已指向新软件包。");
     elements.uploadForm.reset();
