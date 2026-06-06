@@ -1,0 +1,23 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "*"
+        ],
+        "methods": [
+          "GET",
+          "HEAD",
+          "PUT"
+        ],
+        "headers": [
+          "*"
+        ]
+      },
+      "exposeHeaders": [
+        "ETag"
+      ],
+      "maxAgeSeconds": 3600
+    }
+  ]
+}
