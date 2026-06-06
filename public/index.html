@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>软件下载</title>
+    <meta name="description" content="软件包上传与下载" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Software Package</p>
+          <h1 id="page-title">软件下载</h1>
+          <p class="summary">当前可用安装包会显示在这里。下载无需输入 key，上传新版本需要管理员 token。</p>
+        </div>
+        <div class="mark" aria-hidden="true">
+          <span></span>
+        </div>
+      </section>
+
+      <section class="panel package-card" aria-labelledby="package-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Latest Release</p>
+            <h2 id="package-title">当前软件包</h2>
+          </div>
+          <span class="status" id="package-status">读取中</span>
+        </div>
+
+        <div class="package-main">
+          <div>
+            <h3 id="app-name">Android 软件包</h3>
+            <p id="app-version" class="muted">版本信息读取中</p>
+          </div>
+          <a id="download-button" class="button primary" href="/api/download">下载 APK</a>
+        </div>
+
+        <dl class="meta-grid">
+          <div>
+            <dt>文件</dt>
+            <dd id="file-name">-</dd>
+          </div>
+          <div>
+            <dt>大小</dt>
+            <dd id="file-size">-</dd>
+          </div>
+          <div>
+            <dt>日期</dt>
+            <dd id="release-date">-</dd>
+          </div>
+          <div>
+            <dt>SHA-256</dt>
+            <dd id="sha256">-</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="panel upload-card" aria-labelledby="upload-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Admin Upload</p>
+            <h2 id="upload-title">上传新软件包</h2>
+          </div>
+        </div>
+
+        <form id="upload-form" class="upload-form">
+          <label>
+            软件名称
+            <input name="appName" autocomplete="off" placeholder="Android 软件包" />
+          </label>
+          <label>
+            版本号
+            <input name="version" autocomplete="off" placeholder="例如 1.0.0" />
+          </label>
+          <label class="full">
+            APK 文件
+            <input name="file" type="file" accept=".apk,application/vnd.android.package-archive" required />
+          </label>
+          <label class="full">
+            管理员 token
+            <input name="token" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="button" type="submit">上传并发布</button>
+        </form>
+
+        <div class="progress" aria-live="polite">
+          <div id="progress-bar"></div>
+          <p id="upload-message">选择 APK 后即可上传。</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "software-download-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "publish:apk": "node scripts/publish-apk.mjs",
+    "configure:cors": "node scripts/configure-cors.mjs",
+    "check": "node --check api/package.js && node --check api/download.js && node --check api/presign-upload.js && node --check lib/r2.js && node --check scripts/publish-apk.mjs && node --check scripts/configure-cors.mjs"
+  }
+}
