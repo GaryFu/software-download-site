@@ -48,7 +48,7 @@
           <button id="logout-button" class="button ghost" type="button">退出登录</button>
         </div>
 
-        <form id="upload-form" class="upload-form">
+        <form id="upload-form" class="upload-form" novalidate>
           <label>
             软件名称
             <input name="appName" autocomplete="off" placeholder="Android 软件包" />
@@ -65,7 +65,6 @@
               type="file"
               accept=".apk,application/vnd.android.package-archive"
               class="visually-hidden"
-              required
             />
             <div class="drop-icon" aria-hidden="true"></div>
             <strong>拖拽 APK 到这里</strong>

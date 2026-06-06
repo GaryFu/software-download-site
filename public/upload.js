@@ -47,7 +47,7 @@ function setSelectedFile(file, source = "已选择") {
 }
 
 function firstFileFromList(files) {
-  return [...files].find((file) => file.name.toLowerCase().endsWith(".apk")) || files[0] || null;
+  return [...files].find((file) => file.name.toLowerCase().endsWith(".apk")) || null;
 }
 
 async function refreshSession() {
@@ -122,7 +122,12 @@ elements.dropZone.addEventListener("keydown", (event) => {
 });
 
 elements.fileInput.addEventListener("change", () => {
-  setSelectedFile(firstFileFromList(elements.fileInput.files), "已选择");
+  const file = firstFileFromList(elements.fileInput.files);
+  if (!file) {
+    setProgress(0, "请选择 APK 文件。");
+    return;
+  }
+  setSelectedFile(file, "已选择");
 });
 
 ["dragenter", "dragover"].forEach((eventName) => {
@@ -140,13 +145,20 @@ elements.fileInput.addEventListener("change", () => {
 });
 
 elements.dropZone.addEventListener("drop", (event) => {
-  setSelectedFile(firstFileFromList(event.dataTransfer.files), "已拖入");
+  const file = firstFileFromList(event.dataTransfer.files);
+  if (!file) {
+    setProgress(0, "拖入的文件不是 APK。");
+    return;
+  }
+  setSelectedFile(file, "已拖入");
 });
 
 window.addEventListener("paste", (event) => {
   const file = firstFileFromList(event.clipboardData?.files || []);
   if (file) {
     setSelectedFile(file, "已粘贴");
+  } else if (event.clipboardData?.files?.length) {
+    setProgress(0, "粘贴的文件不是 APK。");
   }
 });
 
