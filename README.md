@@ -46,4 +46,10 @@ With Wrangler logged in:
 npm run configure:cors:wrangler
 ```
 
+With a Cloudflare API token:
+
+```bash
+CLOUDFLARE_API_TOKEN=... npm run configure:cors:api
+```
+
 The older `npm run configure:cors` path uses the S3-compatible API and only works if the R2 access key has bucket CORS permissions.
