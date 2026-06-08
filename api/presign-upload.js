@@ -1,4 +1,4 @@
-import { buildUploadObjectKey, byteLength, presignMetadataUpload, presignUpload, publicUrlForKey } from "../lib/r2.js";
+import { buildUploadObjectKey, presignUpload, publicUrlForKey } from "../lib/r2.js";
 import { requireUploadSession } from "../lib/auth.js";
 
 async function readJson(request) {
@@ -40,15 +40,10 @@ export default async function handler(request, response) {
       uploadedAt: new Date().toISOString(),
       downloadUrl: publicUrlForKey(objectKey),
     };
-    const metadataBody = JSON.stringify(metadata, null, 2);
-
     response.status(200).json({
       objectKey,
       uploadUrl: presignUpload({ objectKey, contentType }),
       metadata,
-      metadataBody,
-      metadataBytes: byteLength(metadataBody),
-      metadataUploadUrl: presignMetadataUpload(),
     });
   } catch (error) {
     response.status(400).json({ error: error.message || "Unable to create upload URL." });

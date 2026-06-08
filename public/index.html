@@ -3,61 +3,88 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>软件下载</title>
-    <meta name="description" content="软件下载" />
+    <title>软件下载中心</title>
+    <meta name="description" content="软件下载中心" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body class="download-page">
     <main class="download-shell">
       <header class="download-nav">
-        <a class="brand-lockup" href="/" aria-label="软件下载首页">
+        <a class="brand-lockup" href="/" aria-label="软件下载中心">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span>软件发布中心</span>
+          <span>软件下载中心</span>
         </a>
         <a class="admin-link" href="/upload">上传管理</a>
       </header>
 
-      <section class="download-hero" aria-labelledby="page-title">
-        <div class="hero-copy">
-          <span class="release-badge" id="package-status">读取中</span>
-          <h1 id="page-title">下载 Android APK</h1>
-          <p class="summary">这里始终提供当前可用版本。下载无需登录，无需输入 key，点击即可获取 APK。</p>
-
-          <div class="download-actions">
-            <a id="download-button" class="button primary download-cta" href="/api/download">下载 APK</a>
-            <div class="quick-meta">
-              <span id="app-version">版本信息读取中</span>
-              <span id="file-size">-</span>
+      <section class="repo-hero" aria-labelledby="page-title">
+        <div class="repo-copy">
+          <span class="release-badge" id="site-status">读取中</span>
+          <h1 id="page-title">软件包仓库</h1>
+          <p class="summary">集中发布和下载 Android 安装包。每个软件包都有独立版本、文件大小、发布时间和校验值，方便分享与长期维护。</p>
+          <div class="repo-stats" aria-label="仓库统计">
+            <div>
+              <strong id="package-count">-</strong>
+              <span>软件包</span>
+            </div>
+            <div>
+              <strong id="latest-date">-</strong>
+              <span>最近更新</span>
             </div>
           </div>
         </div>
 
-        <aside class="release-card" aria-labelledby="package-title">
-          <div class="app-symbol" aria-hidden="true">
-            <span></span>
-          </div>
-          <p class="eyebrow">Latest Release</p>
-          <h2 id="package-title">当前软件包</h2>
-          <h3 id="app-name">Android 软件包</h3>
-          <p class="muted">已签名 APK，可直接下载安装到手机。</p>
+        <aside class="featured-package" aria-labelledby="featured-title">
+          <span class="featured-label">最新发布</span>
+          <h2 id="featured-title">暂无软件包</h2>
+          <p id="featured-version" class="muted">上传后会显示在这里</p>
+          <a id="featured-download" class="button primary download-cta" href="/api/download">下载</a>
         </aside>
       </section>
 
-      <section class="release-details" aria-label="软件包信息">
-        <div class="detail-row">
-          <span>文件名</span>
-          <strong id="file-name">-</strong>
+      <section class="catalog-section" aria-labelledby="catalog-title">
+        <div class="catalog-head">
+          <div>
+            <p class="eyebrow">Catalog</p>
+            <h2 id="catalog-title">全部软件包</h2>
+          </div>
+          <label class="catalog-search">
+            <span>搜索</span>
+            <input id="package-search" type="search" placeholder="搜索软件、版本或文件名" autocomplete="off" />
+          </label>
         </div>
-        <div class="detail-row">
-          <span>发布日期</span>
-          <strong id="release-date">-</strong>
-        </div>
-        <div class="detail-row hash-row">
-          <span>SHA-256</span>
-          <strong id="sha256">-</strong>
-        </div>
+        <p id="catalog-note">正在读取软件列表...</p>
+        <div id="package-list" class="package-list" aria-live="polite"></div>
       </section>
     </main>
+
+    <template id="package-card-template">
+      <article class="software-card">
+        <div class="software-icon" aria-hidden="true"></div>
+        <div class="software-body">
+          <div class="software-title-row">
+            <h3></h3>
+            <span class="version-pill"></span>
+          </div>
+          <dl>
+            <div>
+              <dt>文件</dt>
+              <dd data-field="fileName"></dd>
+            </div>
+            <div>
+              <dt>大小</dt>
+              <dd data-field="size"></dd>
+            </div>
+            <div>
+              <dt>日期</dt>
+              <dd data-field="releaseDate"></dd>
+            </div>
+          </dl>
+          <p class="hash-text"></p>
+        </div>
+        <a class="button primary card-download" href="#">下载</a>
+      </article>
+    </template>
 
     <script src="/app.js" type="module"></script>
   </body>

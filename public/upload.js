@@ -208,10 +208,18 @@ elements.uploadForm.addEventListener("submit", async (event) => {
       file.type || "application/vnd.android.package-archive",
     );
 
-    setProgress(86, "正在发布软件包信息...");
-    await uploadToSignedUrl(presign.metadataUploadUrl, presign.metadataBody, "application/json");
+    setProgress(86, "正在登记软件包目录...");
+    const registerResponse = await fetch("/api/register-package", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(presign.metadata),
+    });
+    const registerResult = await registerResponse.json();
+    if (!registerResponse.ok) {
+      throw new Error(registerResult.error || "软件包已上传，但目录登记失败。");
+    }
 
-    setProgress(100, "发布完成。下载页已指向新软件包。");
+    setProgress(100, "发布完成。软件包已加入下载列表。");
     elements.uploadForm.reset();
     setSelectedFile(null);
   } catch (error) {
