@@ -7,56 +7,56 @@
     <meta name="description" content="软件下载" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
-    <main class="shell">
-      <section class="panel hero" aria-labelledby="page-title">
-        <div>
-          <p class="eyebrow">Software Package</p>
-          <h1 id="page-title">软件下载</h1>
-          <p class="summary">当前可用安装包会显示在这里。点击下载即可安装，无需登录，也无需输入任何 key。</p>
+  <body class="download-page">
+    <main class="download-shell">
+      <header class="download-nav">
+        <a class="brand-lockup" href="/" aria-label="软件下载首页">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>软件发布中心</span>
+        </a>
+        <a class="admin-link" href="/upload">上传管理</a>
+      </header>
+
+      <section class="download-hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <span class="release-badge" id="package-status">读取中</span>
+          <h1 id="page-title">下载 Android APK</h1>
+          <p class="summary">这里始终提供当前可用版本。下载无需登录，无需输入 key，点击即可获取 APK。</p>
+
+          <div class="download-actions">
+            <a id="download-button" class="button primary download-cta" href="/api/download">下载 APK</a>
+            <div class="quick-meta">
+              <span id="app-version">版本信息读取中</span>
+              <span id="file-size">-</span>
+            </div>
+          </div>
         </div>
-        <div class="mark" aria-hidden="true">
-          <span></span>
-        </div>
+
+        <aside class="release-card" aria-labelledby="package-title">
+          <div class="app-symbol" aria-hidden="true">
+            <span></span>
+          </div>
+          <p class="eyebrow">Latest Release</p>
+          <h2 id="package-title">当前软件包</h2>
+          <h3 id="app-name">Android 软件包</h3>
+          <p class="muted">已签名 APK，可直接下载安装到手机。</p>
+        </aside>
       </section>
 
-      <section class="panel package-card" aria-labelledby="package-title">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Latest Release</p>
-            <h2 id="package-title">当前软件包</h2>
-          </div>
-          <span class="status" id="package-status">读取中</span>
+      <section class="release-details" aria-label="软件包信息">
+        <div class="detail-row">
+          <span>文件名</span>
+          <strong id="file-name">-</strong>
         </div>
-
-        <div class="package-main">
-          <div>
-            <h3 id="app-name">Android 软件包</h3>
-            <p id="app-version" class="muted">版本信息读取中</p>
-          </div>
-          <a id="download-button" class="button primary" href="/api/download">下载 APK</a>
+        <div class="detail-row">
+          <span>发布日期</span>
+          <strong id="release-date">-</strong>
         </div>
-
-        <dl class="meta-grid">
-          <div>
-            <dt>文件</dt>
-            <dd id="file-name">-</dd>
-          </div>
-          <div>
-            <dt>大小</dt>
-            <dd id="file-size">-</dd>
-          </div>
-          <div>
-            <dt>日期</dt>
-            <dd id="release-date">-</dd>
-          </div>
-          <div>
-            <dt>SHA-256</dt>
-            <dd id="sha256">-</dd>
-          </div>
-        </dl>
+        <div class="detail-row hash-row">
+          <span>SHA-256</span>
+          <strong id="sha256">-</strong>
+        </div>
       </section>
-      <p class="quiet-foot">如需发布新版本，请访问上传管理页。</p>
     </main>
 
     <script src="/app.js" type="module"></script>
