@@ -30,12 +30,15 @@ function downloadHref(item) {
   return `/api/download?key=${encodeURIComponent(item.objectKey)}`;
 }
 
+function detailHref(item) {
+  return `/app?key=${encodeURIComponent(item.objectKey)}`;
+}
+
 function dedupePackages(packages) {
   const byKey = new Map();
   packages.forEach((item) => {
-    const key = item.sha256
-      ? `sha256:${String(item.sha256).toLowerCase()}`
-      : [item.appName, item.version, item.fileName].filter(Boolean).join("|").toLowerCase();
+    const key = item.objectKey;
+    if (!key) return;
     const current = byKey.get(key);
     if (!current || String(item.uploadedAt || "").localeCompare(String(current.uploadedAt || "")) > 0) {
       byKey.set(key, item);
@@ -78,6 +81,10 @@ function renderFeatured(item) {
     item.releaseDate || "",
   ].filter(Boolean).join(" · ");
   elements.featuredDownload.href = downloadHref(item);
+  elements.featuredTitle.closest(".featured-package").onclick = (event) => {
+    if (event.target.closest("a")) return;
+    window.location.href = detailHref(item);
+  };
   elements.featuredDownload.removeAttribute("aria-disabled");
   renderIcon(elements.featuredIcon, item);
 }
@@ -88,10 +95,19 @@ function renderCard(item) {
   card.querySelector("h3").textContent = item.appName || "Android 软件包";
   renderIcon(card.querySelector(".software-icon"), item);
   card.querySelector(".version-pill").textContent = item.version ? `v${item.version}` : "未标版本";
-  card.querySelector('[data-field="fileName"]').textContent = item.fileName || "-";
+  card.querySelector('[data-field="category"]').textContent = item.category || "-";
   card.querySelector('[data-field="size"]').textContent = formatBytes(item.size);
   card.querySelector('[data-field="releaseDate"]').textContent = item.releaseDate || "-";
+  const summary = card.querySelector(".software-summary");
+  summary.textContent = item.shortDescription || item.description || item.fileName || "暂无简介";
+  const tagList = card.querySelector(".tag-list");
+  (Array.isArray(item.tags) ? item.tags : []).slice(0, 4).forEach((tag) => {
+    const pill = document.createElement("span");
+    pill.textContent = tag;
+    tagList.append(pill);
+  });
   card.querySelector(".hash-text").textContent = item.sha256 ? `SHA-256 ${item.sha256}` : "未提供 SHA-256";
+  card.querySelector(".card-detail").href = detailHref(item);
   card.querySelector(".card-download").href = downloadHref(item);
   return fragment;
 }
@@ -115,7 +131,18 @@ function applySearch() {
   const query = elements.packageSearch.value.trim().toLowerCase();
   const visiblePackages = query
     ? allPackages.filter((item) =>
-        [item.appName, item.version, item.fileName, item.sha256]
+        [
+          item.appName,
+          item.version,
+          item.fileName,
+          item.sha256,
+          item.shortDescription,
+          item.description,
+          item.category,
+          item.developerName,
+          item.packageName,
+          ...(Array.isArray(item.tags) ? item.tags : []),
+        ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase()

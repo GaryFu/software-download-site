@@ -15,6 +15,10 @@ const elements = {
   manageList: document.querySelector("#manage-list"),
   refreshPackages: document.querySelector("#refresh-packages"),
   manageTemplate: document.querySelector("#manage-card-template"),
+  editPanel: document.querySelector("#edit-panel"),
+  editForm: document.querySelector("#edit-form"),
+  editMessage: document.querySelector("#edit-message"),
+  cancelEdit: document.querySelector("#cancel-edit"),
 };
 
 let selectedFile = null;
@@ -24,6 +28,7 @@ function setAuthenticated(isAuthenticated) {
   elements.loginPanel.classList.toggle("hidden", isAuthenticated);
   elements.uploadPanel.classList.toggle("hidden", !isAuthenticated);
   elements.managePanel.classList.toggle("hidden", !isAuthenticated);
+  elements.editPanel.classList.add("hidden");
   if (isAuthenticated) {
     loadManageList();
   }
@@ -48,9 +53,8 @@ function formatBytes(bytes) {
 function dedupePackages(packages) {
   const byKey = new Map();
   packages.forEach((item) => {
-    const key = item.sha256
-      ? `sha256:${String(item.sha256).toLowerCase()}`
-      : [item.appName, item.version, item.fileName].filter(Boolean).join("|").toLowerCase();
+    const key = item.objectKey;
+    if (!key) return;
     const current = byKey.get(key);
     if (!current || String(item.uploadedAt || "").localeCompare(String(current.uploadedAt || "")) > 0) {
       byKey.set(key, item);
@@ -84,6 +88,39 @@ function fallbackIconUrl(appName, fileName) {
     return "/icons/poetry-archive.png";
   }
   return "";
+}
+
+function splitList(value) {
+  return String(value || "")
+    .split(/[\n,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function joinList(value) {
+  return (Array.isArray(value) ? value : splitList(value)).join("\n");
+}
+
+function metadataFromForm(formData) {
+  return {
+    appName: String(formData.get("appName") || "Android 软件包"),
+    version: String(formData.get("version") || ""),
+    iconUrl: String(formData.get("iconUrl") || "").trim(),
+    shortDescription: String(formData.get("shortDescription") || "").trim(),
+    description: String(formData.get("description") || "").trim(),
+    category: String(formData.get("category") || "").trim(),
+    tags: splitList(formData.get("tags")),
+    developerName: String(formData.get("developerName") || "").trim(),
+    packageName: String(formData.get("packageName") || "").trim(),
+    minAndroidVersion: String(formData.get("minAndroidVersion") || "").trim(),
+    permissions: splitList(formData.get("permissions")),
+    featureImageUrl: String(formData.get("featureImageUrl") || "").trim(),
+    screenshots: splitList(formData.get("screenshots")),
+    releaseNotes: String(formData.get("releaseNotes") || "").trim(),
+    websiteUrl: String(formData.get("websiteUrl") || "").trim(),
+    supportEmail: String(formData.get("supportEmail") || "").trim(),
+    privacyPolicyUrl: String(formData.get("privacyPolicyUrl") || "").trim(),
+  };
 }
 
 function setSelectedFile(file, source = "已选择") {
@@ -137,14 +174,41 @@ function renderManageList() {
     card.querySelector(".version-pill").textContent = item.version ? `v${item.version}` : "未标版本";
     card.querySelector(".muted").textContent = [
       item.fileName || "未命名文件",
+      item.category || "",
       formatBytes(item.size),
       item.releaseDate || "",
     ].filter(Boolean).join(" · ");
     card.querySelector(".hash-text").textContent = item.sha256 ? `SHA-256 ${item.sha256}` : "未提供 SHA-256";
-    card.querySelector("button").addEventListener("click", () => deletePackage(item));
+    card.querySelector(".edit-button").addEventListener("click", () => startEdit(item));
+    card.querySelector(".delete-button").addEventListener("click", () => deletePackage(item));
     fragment.append(row);
   });
   elements.manageList.append(fragment);
+}
+
+function startEdit(item) {
+  elements.editPanel.classList.remove("hidden");
+  elements.editMessage.textContent = "";
+  const form = elements.editForm;
+  form.elements.objectKey.value = item.objectKey || "";
+  form.elements.appName.value = item.appName || "";
+  form.elements.version.value = item.version || "";
+  form.elements.iconUrl.value = item.iconUrl || "";
+  form.elements.shortDescription.value = item.shortDescription || "";
+  form.elements.description.value = item.description || "";
+  form.elements.category.value = item.category || "";
+  form.elements.tags.value = joinList(item.tags);
+  form.elements.developerName.value = item.developerName || "";
+  form.elements.packageName.value = item.packageName || "";
+  form.elements.minAndroidVersion.value = item.minAndroidVersion || "";
+  form.elements.permissions.value = joinList(item.permissions);
+  form.elements.featureImageUrl.value = item.featureImageUrl || "";
+  form.elements.screenshots.value = joinList(item.screenshots);
+  form.elements.releaseNotes.value = item.releaseNotes || "";
+  form.elements.websiteUrl.value = item.websiteUrl || "";
+  form.elements.supportEmail.value = item.supportEmail || "";
+  form.elements.privacyPolicyUrl.value = item.privacyPolicyUrl || "";
+  elements.editPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function deletePackage(item) {
@@ -296,6 +360,7 @@ elements.uploadForm.addEventListener("submit", async (event) => {
   try {
     setProgress(10, "正在计算 SHA-256...");
     const sha256 = await sha256File(file);
+    const metadata = metadataFromForm(formData);
 
     setProgress(28, "正在创建 R2 上传地址...");
     const presignResponse = await fetch("/api/presign-upload", {
@@ -310,9 +375,8 @@ elements.uploadForm.addEventListener("submit", async (event) => {
         contentType: file.type || "application/vnd.android.package-archive",
         size: file.size,
         sha256,
-        iconUrl:
-          String(formData.get("iconUrl") || "").trim() ||
-          fallbackIconUrl(String(formData.get("appName") || ""), file.name),
+        ...metadata,
+        iconUrl: metadata.iconUrl || fallbackIconUrl(metadata.appName, file.name),
       }),
     });
     const presign = await presignResponse.json();
@@ -353,5 +417,44 @@ elements.uploadForm.addEventListener("submit", async (event) => {
 });
 
 elements.refreshPackages.addEventListener("click", loadManageList);
+
+elements.cancelEdit.addEventListener("click", () => {
+  elements.editForm.reset();
+  elements.editPanel.classList.add("hidden");
+  elements.editMessage.textContent = "";
+});
+
+elements.editForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submitButton = elements.editForm.querySelector("button[type='submit']");
+  const formData = new FormData(elements.editForm);
+  submitButton.disabled = true;
+  elements.editMessage.textContent = "正在保存...";
+
+  try {
+    const response = await fetch("/api/update-package", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        objectKey: String(formData.get("objectKey") || ""),
+        patch: metadataFromForm(formData),
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      if (response.status === 401) {
+        setAuthenticated(false);
+      }
+      throw new Error(data.error || "保存失败。");
+    }
+    catalogPackages = dedupePackages(data.catalog?.packages || catalogPackages);
+    renderManageList();
+    elements.editMessage.textContent = "已保存修改。";
+  } catch (error) {
+    elements.editMessage.textContent = error.message || "保存失败。";
+  } finally {
+    submitButton.disabled = false;
+  }
+});
 
 refreshSession();

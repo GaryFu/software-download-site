@@ -61,6 +61,62 @@
             图标地址
             <input name="iconUrl" autocomplete="off" placeholder="例如 /icons/poetry-archive.png，可留空" />
           </label>
+          <label>
+            短简介
+            <input name="shortDescription" autocomplete="off" placeholder="一句话说明应用用途" />
+          </label>
+          <label>
+            分类
+            <input name="category" autocomplete="off" placeholder="例如 工具、教育、效率" />
+          </label>
+          <label>
+            开发者
+            <input name="developerName" autocomplete="off" placeholder="开发者或团队名称" />
+          </label>
+          <label>
+            包名
+            <input name="packageName" autocomplete="off" placeholder="例如 com.example.app" />
+          </label>
+          <label>
+            最低 Android
+            <input name="minAndroidVersion" autocomplete="off" placeholder="例如 Android 8.0" />
+          </label>
+          <label>
+            标签
+            <input name="tags" autocomplete="off" placeholder="用逗号分隔，例如 诗词, 离线, 学习" />
+          </label>
+          <label class="full">
+            详细描述
+            <textarea name="description" rows="5" placeholder="应用功能、适用场景和使用说明"></textarea>
+          </label>
+          <label class="full">
+            更新日志
+            <textarea name="releaseNotes" rows="4" placeholder="本版本新增、修复或调整内容"></textarea>
+          </label>
+          <label class="full">
+            权限说明
+            <textarea name="permissions" rows="3" placeholder="每行或用逗号分隔一个权限说明"></textarea>
+          </label>
+          <label class="full">
+            宣传图地址
+            <input name="featureImageUrl" autocomplete="off" placeholder="用于详情页顶部的大图，可留空" />
+          </label>
+          <label class="full">
+            截图地址
+            <textarea name="screenshots" rows="3" placeholder="每行或用逗号分隔一个截图 URL"></textarea>
+          </label>
+          <label>
+            官网
+            <input name="websiteUrl" autocomplete="off" placeholder="https://example.com" />
+          </label>
+          <label>
+            支持邮箱
+            <input name="supportEmail" autocomplete="off" placeholder="support@example.com" />
+          </label>
+          <label class="full">
+            隐私政策
+            <input name="privacyPolicyUrl" autocomplete="off" placeholder="https://example.com/privacy" />
+          </label>
 
           <div id="drop-zone" class="drop-zone full" role="button" tabindex="0">
             <input
@@ -96,6 +152,89 @@
         <p id="manage-message" class="form-message" aria-live="polite">正在读取软件包...</p>
         <div id="manage-list" class="manage-list"></div>
       </section>
+
+      <section id="edit-panel" class="panel upload-card hidden" aria-labelledby="edit-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Edit</p>
+            <h2 id="edit-title">编辑软件信息</h2>
+          </div>
+          <button id="cancel-edit" class="button ghost" type="button">取消</button>
+        </div>
+        <form id="edit-form" class="upload-form">
+          <input name="objectKey" type="hidden" />
+          <label>
+            软件名称
+            <input name="appName" autocomplete="off" />
+          </label>
+          <label>
+            版本号
+            <input name="version" autocomplete="off" />
+          </label>
+          <label class="full">
+            图标地址
+            <input name="iconUrl" autocomplete="off" />
+          </label>
+          <label>
+            短简介
+            <input name="shortDescription" autocomplete="off" />
+          </label>
+          <label>
+            分类
+            <input name="category" autocomplete="off" />
+          </label>
+          <label>
+            开发者
+            <input name="developerName" autocomplete="off" />
+          </label>
+          <label>
+            包名
+            <input name="packageName" autocomplete="off" />
+          </label>
+          <label>
+            最低 Android
+            <input name="minAndroidVersion" autocomplete="off" />
+          </label>
+          <label>
+            标签
+            <input name="tags" autocomplete="off" />
+          </label>
+          <label class="full">
+            详细描述
+            <textarea name="description" rows="5"></textarea>
+          </label>
+          <label class="full">
+            更新日志
+            <textarea name="releaseNotes" rows="4"></textarea>
+          </label>
+          <label class="full">
+            权限说明
+            <textarea name="permissions" rows="3"></textarea>
+          </label>
+          <label class="full">
+            宣传图地址
+            <input name="featureImageUrl" autocomplete="off" />
+          </label>
+          <label class="full">
+            截图地址
+            <textarea name="screenshots" rows="3"></textarea>
+          </label>
+          <label>
+            官网
+            <input name="websiteUrl" autocomplete="off" />
+          </label>
+          <label>
+            支持邮箱
+            <input name="supportEmail" autocomplete="off" />
+          </label>
+          <label class="full">
+            隐私政策
+            <input name="privacyPolicyUrl" autocomplete="off" />
+          </label>
+          <button class="button full" type="submit">保存修改</button>
+        </form>
+        <p id="edit-message" class="form-message" aria-live="polite"></p>
+      </section>
     </main>
 
     <template id="manage-card-template">
@@ -109,7 +248,10 @@
           <p class="muted"></p>
           <p class="hash-text"></p>
         </div>
-        <button class="button danger-button" type="button">删除</button>
+        <div class="manage-actions">
+          <button class="button ghost edit-button" type="button">编辑</button>
+          <button class="button danger-button delete-button" type="button">删除</button>
+        </div>
       </article>
     </template>
 
