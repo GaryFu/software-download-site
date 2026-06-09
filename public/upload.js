@@ -53,7 +53,14 @@ function formatBytes(bytes) {
 function dedupePackages(packages) {
   const byKey = new Map();
   packages.forEach((item) => {
-    const key = item.objectKey;
+    const identity = String(item.appName || item.packageName || "").trim().toLowerCase();
+    const version = String(item.version || "").trim().toLowerCase();
+    const sha256 = String(item.sha256 || "").trim().toLowerCase();
+    const key = identity && version
+      ? `release:${identity}|${version}`
+      : identity && sha256
+        ? `binary:${identity}|${sha256}`
+        : `object:${item.objectKey}`;
     if (!key) return;
     const current = byKey.get(key);
     if (!current || String(item.uploadedAt || "").localeCompare(String(current.uploadedAt || "")) > 0) {

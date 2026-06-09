@@ -52,9 +52,17 @@ function detailHref(item) {
 }
 
 function appGroupKey(item) {
-  return String(item.packageName || item.appName || item.objectKey || "")
+  return String(item.appName || item.packageName || item.objectKey || "")
     .trim()
     .toLowerCase();
+}
+
+function versionReleaseKey(item) {
+  const version = String(item.version || "").trim().toLowerCase();
+  if (version) return `version:${version}`;
+  const sha256 = String(item.sha256 || "").trim().toLowerCase();
+  if (sha256) return `sha:${sha256}`;
+  return `object:${item.objectKey}`;
 }
 
 function renderIcon(container, item) {
@@ -124,7 +132,17 @@ function renderScreenshots(item) {
 
 function renderVersions(current, packages) {
   elements.versions.replaceChildren();
-  const versions = packages.filter((item) => appGroupKey(item) === appGroupKey(current));
+  const versionsByRelease = new Map();
+  packages
+    .filter((item) => appGroupKey(item) === appGroupKey(current))
+    .forEach((item) => {
+      const key = versionReleaseKey(item);
+      const stored = versionsByRelease.get(key);
+      if (!stored || String(item.uploadedAt || "").localeCompare(String(stored.uploadedAt || "")) > 0) {
+        versionsByRelease.set(key, item);
+      }
+    });
+  const versions = [...versionsByRelease.values()];
   if (!versions.length) {
     const empty = document.createElement("p");
     empty.className = "empty-state";

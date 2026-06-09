@@ -34,10 +34,26 @@ function detailHref(item) {
   return `/app?key=${encodeURIComponent(item.objectKey)}`;
 }
 
+function packageReleaseKey(item) {
+  const identity = String(item.appName || item.packageName || "").trim().toLowerCase();
+  if (!identity) {
+    return `object:${item.objectKey}`;
+  }
+  const version = String(item.version || "").trim().toLowerCase();
+  if (version) {
+    return `release:${identity}|${version}`;
+  }
+  const sha256 = String(item.sha256 || "").trim().toLowerCase();
+  if (sha256) {
+    return `binary:${identity}|${sha256}`;
+  }
+  return `object:${item.objectKey}`;
+}
+
 function dedupePackages(packages) {
   const byKey = new Map();
   packages.forEach((item) => {
-    const key = item.objectKey;
+    const key = packageReleaseKey(item);
     if (!key) return;
     const current = byKey.get(key);
     if (!current || String(item.uploadedAt || "").localeCompare(String(current.uploadedAt || "")) > 0) {
