@@ -39,6 +39,7 @@ export default async function handler(request, response) {
       releaseDate: payload.releaseDate || new Date().toISOString().slice(0, 10),
       uploadedAt: new Date().toISOString(),
       downloadUrl: publicUrlForKey(objectKey),
+      iconUrl: payload.iconUrl || "",
     };
     response.status(200).json({
       objectKey,

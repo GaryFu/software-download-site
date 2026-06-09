@@ -10,13 +10,23 @@ const elements = {
   selectedFile: document.querySelector("#selected-file"),
   progressBar: document.querySelector("#progress-bar"),
   uploadMessage: document.querySelector("#upload-message"),
+  managePanel: document.querySelector("#manage-panel"),
+  manageMessage: document.querySelector("#manage-message"),
+  manageList: document.querySelector("#manage-list"),
+  refreshPackages: document.querySelector("#refresh-packages"),
+  manageTemplate: document.querySelector("#manage-card-template"),
 };
 
 let selectedFile = null;
+let catalogPackages = [];
 
 function setAuthenticated(isAuthenticated) {
   elements.loginPanel.classList.toggle("hidden", isAuthenticated);
   elements.uploadPanel.classList.toggle("hidden", !isAuthenticated);
+  elements.managePanel.classList.toggle("hidden", !isAuthenticated);
+  if (isAuthenticated) {
+    loadManageList();
+  }
 }
 
 function setProgress(percent, message) {
@@ -33,6 +43,47 @@ function formatBytes(bytes) {
     unitIndex += 1;
   }
   return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function dedupePackages(packages) {
+  const byKey = new Map();
+  packages.forEach((item) => {
+    const key = item.sha256
+      ? `sha256:${String(item.sha256).toLowerCase()}`
+      : [item.appName, item.version, item.fileName].filter(Boolean).join("|").toLowerCase();
+    const current = byKey.get(key);
+    if (!current || String(item.uploadedAt || "").localeCompare(String(current.uploadedAt || "")) > 0) {
+      byKey.set(key, item);
+    }
+  });
+  return [...byKey.values()];
+}
+
+function renderIcon(container, item) {
+  container.replaceChildren();
+  container.classList.toggle("has-image", Boolean(item?.iconUrl));
+  container.classList.toggle("has-initial", !item?.iconUrl);
+  if (item?.iconUrl) {
+    const image = document.createElement("img");
+    image.src = item.iconUrl;
+    image.alt = "";
+    image.loading = "lazy";
+    image.decoding = "async";
+    container.append(image);
+    return;
+  }
+  const initial = document.createElement("span");
+  initial.className = "app-initial";
+  initial.textContent = (item?.appName || item?.fileName || "A").trim().slice(0, 1).toUpperCase();
+  container.append(initial);
+}
+
+function fallbackIconUrl(appName, fileName) {
+  const text = `${appName || ""} ${fileName || ""}`.toLowerCase();
+  if (text.includes("古诗") || text.includes("诗词") || text.includes("poetry")) {
+    return "/icons/poetry-archive.png";
+  }
+  return "";
 }
 
 function setSelectedFile(file, source = "已选择") {
@@ -54,6 +105,74 @@ async function refreshSession() {
   const response = await fetch("/api/session");
   const data = await response.json();
   setAuthenticated(Boolean(data.authenticated));
+}
+
+async function loadManageList() {
+  elements.manageMessage.textContent = "正在读取软件包...";
+  try {
+    const response = await fetch(`/api/catalog?t=${Date.now()}`);
+    if (!response.ok) {
+      throw new Error("无法读取软件包列表。");
+    }
+    const catalog = await response.json();
+    catalogPackages = dedupePackages(Array.isArray(catalog.packages) ? catalog.packages : []);
+    renderManageList();
+  } catch (error) {
+    elements.manageMessage.textContent = error.message || "读取失败。";
+  }
+}
+
+function renderManageList() {
+  elements.manageList.replaceChildren();
+  elements.manageMessage.textContent = catalogPackages.length
+    ? `共 ${catalogPackages.length} 个软件包。`
+    : "还没有已发布的软件包。";
+  const fragment = document.createDocumentFragment();
+  catalogPackages.forEach((item) => {
+    const row = elements.manageTemplate.content.cloneNode(true);
+    const card = row.querySelector(".manage-card");
+    card.dataset.objectKey = item.objectKey;
+    renderIcon(card.querySelector(".software-icon"), item);
+    card.querySelector("h3").textContent = item.appName || "Android 软件包";
+    card.querySelector(".version-pill").textContent = item.version ? `v${item.version}` : "未标版本";
+    card.querySelector(".muted").textContent = [
+      item.fileName || "未命名文件",
+      formatBytes(item.size),
+      item.releaseDate || "",
+    ].filter(Boolean).join(" · ");
+    card.querySelector(".hash-text").textContent = item.sha256 ? `SHA-256 ${item.sha256}` : "未提供 SHA-256";
+    card.querySelector("button").addEventListener("click", () => deletePackage(item));
+    fragment.append(row);
+  });
+  elements.manageList.append(fragment);
+}
+
+async function deletePackage(item) {
+  const name = item.appName || item.fileName || "这个软件包";
+  const confirmed = window.confirm(`确定删除“${name}”吗？这会从下载列表移除，并删除 R2 中的文件。`);
+  if (!confirmed) {
+    return;
+  }
+  elements.manageMessage.textContent = "正在删除...";
+  try {
+    const response = await fetch("/api/delete-package", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ objectKey: item.objectKey }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      if (response.status === 401) {
+        setAuthenticated(false);
+      }
+      throw new Error(data.error || "删除失败。");
+    }
+    catalogPackages = dedupePackages(data.catalog?.packages || catalogPackages.filter((pkg) => pkg.objectKey !== item.objectKey));
+    renderManageList();
+    elements.manageMessage.textContent = `已删除“${name}”。`;
+  } catch (error) {
+    elements.manageMessage.textContent = error.message || "删除失败。";
+  }
 }
 
 async function sha256File(file) {
@@ -191,6 +310,9 @@ elements.uploadForm.addEventListener("submit", async (event) => {
         contentType: file.type || "application/vnd.android.package-archive",
         size: file.size,
         sha256,
+        iconUrl:
+          String(formData.get("iconUrl") || "").trim() ||
+          fallbackIconUrl(String(formData.get("appName") || ""), file.name),
       }),
     });
     const presign = await presignResponse.json();
@@ -222,11 +344,14 @@ elements.uploadForm.addEventListener("submit", async (event) => {
     setProgress(100, "发布完成。软件包已加入下载列表。");
     elements.uploadForm.reset();
     setSelectedFile(null);
+    await loadManageList();
   } catch (error) {
     setProgress(0, error.message || "上传失败。");
   } finally {
     submitButton.disabled = false;
   }
 });
+
+elements.refreshPackages.addEventListener("click", loadManageList);
 
 refreshSession();

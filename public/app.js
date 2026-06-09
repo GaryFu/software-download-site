@@ -5,6 +5,7 @@ const elements = {
   featuredTitle: document.querySelector("#featured-title"),
   featuredVersion: document.querySelector("#featured-version"),
   featuredDownload: document.querySelector("#featured-download"),
+  featuredIcon: document.querySelector("#featured-icon"),
   catalogNote: document.querySelector("#catalog-note"),
   packageList: document.querySelector("#package-list"),
   packageSearch: document.querySelector("#package-search"),
@@ -29,11 +30,45 @@ function downloadHref(item) {
   return `/api/download?key=${encodeURIComponent(item.objectKey)}`;
 }
 
+function dedupePackages(packages) {
+  const byKey = new Map();
+  packages.forEach((item) => {
+    const key = item.sha256
+      ? `sha256:${String(item.sha256).toLowerCase()}`
+      : [item.appName, item.version, item.fileName].filter(Boolean).join("|").toLowerCase();
+    const current = byKey.get(key);
+    if (!current || String(item.uploadedAt || "").localeCompare(String(current.uploadedAt || "")) > 0) {
+      byKey.set(key, item);
+    }
+  });
+  return [...byKey.values()];
+}
+
+function renderIcon(container, item) {
+  container.replaceChildren();
+  container.classList.toggle("has-image", Boolean(item?.iconUrl));
+  container.classList.toggle("has-initial", !item?.iconUrl);
+  if (item?.iconUrl) {
+    const image = document.createElement("img");
+    image.src = item.iconUrl;
+    image.alt = "";
+    image.loading = "lazy";
+    image.decoding = "async";
+    container.append(image);
+    return;
+  }
+  const initial = document.createElement("span");
+  initial.className = "app-initial";
+  initial.textContent = (item?.appName || item?.fileName || "A").trim().slice(0, 1).toUpperCase();
+  container.append(initial);
+}
+
 function renderFeatured(item) {
   if (!item) {
     elements.featuredTitle.textContent = "暂无软件包";
     elements.featuredVersion.textContent = "上传后会显示在这里";
     elements.featuredDownload.setAttribute("aria-disabled", "true");
+    renderIcon(elements.featuredIcon, null);
     return;
   }
   elements.featuredTitle.textContent = item.appName || "Android 软件包";
@@ -44,12 +79,14 @@ function renderFeatured(item) {
   ].filter(Boolean).join(" · ");
   elements.featuredDownload.href = downloadHref(item);
   elements.featuredDownload.removeAttribute("aria-disabled");
+  renderIcon(elements.featuredIcon, item);
 }
 
 function renderCard(item) {
   const fragment = elements.template.content.cloneNode(true);
   const card = fragment.querySelector(".software-card");
   card.querySelector("h3").textContent = item.appName || "Android 软件包";
+  renderIcon(card.querySelector(".software-icon"), item);
   card.querySelector(".version-pill").textContent = item.version ? `v${item.version}` : "未标版本";
   card.querySelector('[data-field="fileName"]').textContent = item.fileName || "-";
   card.querySelector('[data-field="size"]').textContent = formatBytes(item.size);
@@ -94,7 +131,7 @@ function applySearch() {
 }
 
 function renderCatalog(catalog) {
-  allPackages = Array.isArray(catalog.packages) ? catalog.packages : [];
+  allPackages = dedupePackages(Array.isArray(catalog.packages) ? catalog.packages : []);
   elements.status.textContent = allPackages.length ? "可下载" : "暂无发布";
   elements.packageCount.textContent = String(allPackages.length);
   elements.latestDate.textContent = allPackages[0]?.releaseDate || "-";

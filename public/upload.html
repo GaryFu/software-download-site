@@ -57,6 +57,10 @@
             版本号
             <input name="version" autocomplete="off" placeholder="例如 1.0.0" />
           </label>
+          <label class="full">
+            图标地址
+            <input name="iconUrl" autocomplete="off" placeholder="例如 /icons/poetry-archive.png，可留空" />
+          </label>
 
           <div id="drop-zone" class="drop-zone full" role="button" tabindex="0">
             <input
@@ -80,7 +84,34 @@
           <p id="upload-message">选择 APK 后即可上传。</p>
         </div>
       </section>
+
+      <section id="manage-panel" class="panel upload-card hidden" aria-labelledby="manage-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Catalog</p>
+            <h2 id="manage-title">已发布软件包</h2>
+          </div>
+          <button id="refresh-packages" class="button ghost" type="button">刷新</button>
+        </div>
+        <p id="manage-message" class="form-message" aria-live="polite">正在读取软件包...</p>
+        <div id="manage-list" class="manage-list"></div>
+      </section>
     </main>
+
+    <template id="manage-card-template">
+      <article class="manage-card">
+        <div class="software-icon app-icon" aria-hidden="true"></div>
+        <div class="manage-body">
+          <div class="software-title-row">
+            <h3></h3>
+            <span class="version-pill"></span>
+          </div>
+          <p class="muted"></p>
+          <p class="hash-text"></p>
+        </div>
+        <button class="button danger-button" type="button">删除</button>
+      </article>
+    </template>
 
     <script src="/upload.js" type="module"></script>
   </body>

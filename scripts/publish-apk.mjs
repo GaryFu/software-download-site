@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { defaultObjectKey, publicUrlForKey, putObject, putPackageMetadata, safeFileName } from "../lib/r2.js";
+import { buildUploadObjectKey, publicUrlForKey, putObject, registerPackage, safeFileName } from "../lib/r2.js";
 
 function arg(name, fallback = "") {
   const prefix = `--${name}=`;
@@ -20,7 +20,7 @@ if (!filePath) {
 }
 
 const body = await fs.readFile(filePath);
-const objectKey = arg("key", defaultObjectKey());
+const objectKey = arg("key", buildUploadObjectKey(path.basename(filePath)));
 const fileName = safeFileName(arg("file-name", path.basename(filePath)));
 const metadata = {
   appName: arg("name", "Android 软件包"),
@@ -32,6 +32,7 @@ const metadata = {
   releaseDate: arg("date", new Date().toISOString().slice(0, 10)),
   uploadedAt: new Date().toISOString(),
   downloadUrl: publicUrlForKey(objectKey),
+  iconUrl: arg("icon-url", ""),
 };
 
 await putObject({
@@ -39,6 +40,6 @@ await putObject({
   body,
   contentType: "application/vnd.android.package-archive",
 });
-await putPackageMetadata(metadata);
+const result = await registerPackage(metadata);
 
-console.log(JSON.stringify(metadata, null, 2));
+console.log(JSON.stringify(result.package, null, 2));
