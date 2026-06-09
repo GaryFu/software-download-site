@@ -1,5 +1,6 @@
 const elements = {
   title: document.querySelector("#app-title"),
+  hero: document.querySelector("#detail-hero"),
   short: document.querySelector("#detail-short"),
   category: document.querySelector("#detail-category"),
   icon: document.querySelector("#detail-icon"),
@@ -188,6 +189,7 @@ function renderDetail(item, packages) {
   renderVersions(item, packages);
 
   elements.feature.replaceChildren();
+  elements.hero.classList.toggle("has-feature", Boolean(item.featureImageUrl));
   elements.feature.classList.toggle("has-feature-image", Boolean(item.featureImageUrl));
   if (item.featureImageUrl) {
     const image = document.createElement("img");
